@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="kr.smhrd.mapper.BoardMapper">
+
+<sql id = "search">
+	<if test = "type == 'writer'">
+		where writer like concat('%',#{keyword},'%')
+	</if>
+	
+	<if test = "type == 'title'">
+		where title like concat('%',#{keyword},'%')
+	</if>
+	
+	<if test = "type == 'content'">
+		where content like concat('%',#{keyword},'%')
+	</if>
+
+</sql>
+
+
+	<select id="getList" resultType="kr.smhrd.entity.Board" parameterType="kr.smhrd.entity.Criteria">
+		select * from reply 
+		<include refid = "search"/>
+		order by boardGroup desc,boardSequence asc
+		limit #{pageStart},#{perPageNum}
+	</select>
+	
+
+
+	<insert id="register" parameterType="kr.smhrd.entity.Board">
+		insert into
+		reply(memId,title, content, writer, boardGroup, boardSequence,
+		boardLevel)
+		select
+		#{memId},#{title},#{content},#{writer},IFNULL(max(boardGroup)+1,0),0,0
+		from reply;
+	</insert>
+
+	<select id="get" resultType="kr.smhrd.entity.Board">
+		select * from reply where idx=#{idx}
+	</select>
+
+	<delete id = "remove">
+		update reply set boardAvailable = 1 where idx=#{idx}
+	</delete> 
+
+
+	<update id="modify" parameterType="kr.smhrd.entity.Board">
+		update reply set
+		title=#{title}, content=#{content} where idx=#{idx}
+
+	</update>
+
+	<update id="replySeqUpdate"
+		parameterType="kr.smhrd.entity.Board">
+		update reply set boardSequence=boardSequence+1
+		where boardGroup=#{boardGroup}
+		and boardSequence>#{boardSequence}
+	</update>
+
+	<insert id="replyInsert" parameterType="kr.smhrd.entity.Board">
+		insert into reply(memId,title, content, writer, boardGroup, boardSequence,
+		boardLevel)
+		values(#{memId},#{title},#{content},#{writer},#{boardGroup},#{boardSequence},#{boardLevel})
+	</insert>
+	
+	<select id = "totalCount" resultType = "int" parameterType="kr.smhrd.entity.Criteria">
+		select count(*) from reply
+		<include refid = "search"/>
+	</select>
+	
+
+
+</mapper>
